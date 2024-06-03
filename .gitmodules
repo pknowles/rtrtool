@@ -1,0 +1,15 @@
+[submodule "external/KTX-Software"]
+	path = external/KTX-Software
+	url = https://github.com/KhronosGroup/KTX-Software.git
+[submodule "external/readytorender"]
+	path = external/readytorender
+	url = https://github.com/pknowles/readytorender.git
+[submodule "external/decodeless/allocator"]
+	path = external/decodeless/allocator
+	url = https://github.com/decodeless/allocator.git
+[submodule "external/decodeless/mappedfile"]
+	path = external/decodeless/mappedfile
+	url = https://github.com/decodeless/mappedfile.git
+[submodule "external/decodeless/writer"]
+	path = external/decodeless/writer
+	url = https://github.com/decodeless/writer.git
