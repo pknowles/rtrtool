@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Pyarelal Knowles, MIT License
+# Copyright (c) 2024-2025 Pyarelal Knowles, MIT License
 set(SOURCE_FILES src/app.cpp src/app_impl.cpp src/glmesh.cpp src/main.cpp)
 add_executable(rtrtool_exe ${SOURCE_FILES})
 set_property(TARGET rtrtool_exe PROPERTY OUTPUT_NAME rtrtool)
@@ -13,23 +13,25 @@ target_link_libraries(
           decodeless::writer
           mikktspace)
 
-# TODO: presets?
-# https://stackoverflow.com/questions/45955272/modern-way-to-set-compiler-flags-in-cross-platform-cmake-project
 if(MSVC)
   add_compile_options(rtrtool_exe PRIVATE /W4 /WX)
 else()
   target_compile_options(rtrtool_exe PRIVATE -Wall -Wextra -Wpedantic -Werror)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(
-      rtrtool_exe PRIVATE $<$<CONFIG:Debug>:-D_GLIBCXX_DEBUG>
-                          $<$<CONFIG:Debug>:-D_GLIBCXX_DEBUG_BACKTRACE>)
-    try_compile(
-      HAS_STDCXX_LIBBACKTRACE SOURCE_FROM_CONTENT
-      stdc++_libbacktrace_test.cpp "int main() { return 0; }"
-      LINK_LIBRARIES stdc++_libbacktrace)
-    if(HAS_STDCXX_LIBBACKTRACE)
-      target_link_libraries(rtrtool_exe
-                            PRIVATE $<$<CONFIG:Debug>:stdc++_libbacktrace>)
+    target_compile_options(rtrtool_exe
+                           PRIVATE $<$<CONFIG:Debug>:-D_GLIBCXX_DEBUG>)
+
+    # Ugly detection for a working _GLIBCXX_DEBUG_BACKTRACE config, but the
+    # feature itself is useful
+    include(../external/readytorender/test/glibcxx_debug_backtrace.cmake)
+    if(GLIBCXX_DEBUG_BACKTRACE_SUPPORTED)
+      target_compile_definitions(
+        rtrtool_exe PRIVATE $<$<CONFIG:Debug>:_GLIBCXX_DEBUG_BACKTRACE>)
+      target_link_libraries(
+        rtrtool_exe
+        PUBLIC $<$<CONFIG:Debug>:${GLIBCXX_DEBUG_BACKTRACE_LIBRARY}>)
+      target_compile_features(rtrtool_exe
+                              PRIVATE ${GLIBCXX_DEBUG_BACKTRACE_CXX_FEATURE})
     endif()
   endif()
 endif()
