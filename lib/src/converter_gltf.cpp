@@ -40,13 +40,16 @@ rtr::common::Material convertGltfMaterial(const WriterAllocator& allocator,
                                                                  std::string_view swizzle = {}) {
         rtr::optional_index32 result;
         if (cgltfTexture && cgltfTexture->image && cgltfTexture->image->uri) {
-            auto key = (std::string(cgltfTexture->image->uri) + ":") + std::string(swizzle);
+            std::string texturePath = cgltfTexture->image->uri;
+            cgltf_decode_uri(texturePath.data()); // *facepalm*
+            texturePath.resize(strlen(texturePath.data()));
+            auto key = (texturePath + ":") + std::string(swizzle);
             auto [it, created] =
                 textureCache.try_emplace(key, IndexedTexture{uint32_t(textureCache.size()), {}});
             auto& [textureIndex, texture] = it->second;
             if (created) {
                 std::span<uint8_t> ktxData =
-                    convertToKtx(allocator, basePath / cgltfTexture->image->uri, swizzle);
+                    convertToKtx(allocator, basePath / texturePath, swizzle);
                 texture = rtr::common::Texture{
                     .ktx = reinterpret_cast<rtr::ktx::Header*>(ktxData.data())};
                 if (!texture.ktx->validateIdentifier())
