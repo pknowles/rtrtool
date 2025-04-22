@@ -127,21 +127,22 @@ template <> struct cgltf_type_traits_inv<cgltf_component_type_r_32f, cgltf_type_
 template <> struct cgltf_type_traits_inv<cgltf_component_type_r_32u, cgltf_type_vec4>        { using element_type = glm::uvec4; };
 // clang-format on
 
-glm::mat4 cgltfTransform(const cgltf_node& node) {
+inline glm::mat4 cgltfTransform(const cgltf_node& node) {
     glm::mat4 result = glm::identity<glm::mat4>();
     if (node.has_matrix) {
-        glm::mat4 matrix;
-        std::ranges::copy(node.matrix, glm::value_ptr(matrix));
-        result *= matrix;
+        std::ranges::copy(node.matrix, glm::value_ptr(result));
+    } else {
+        if (node.has_rotation)
+            result =
+                glm::mat4_cast(glm::quat{node.rotation[3] /* <- not a typo ffs */, node.rotation[0],
+                                         node.rotation[1], node.rotation[2]});
+        if (node.has_translation)
+            result[3] =
+                glm::vec4(node.translation[0], node.translation[1], node.translation[2], 1.0f);
+        // TODO: verify scale order?
+        if (node.has_scale)
+            result = glm::scale(result, glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
     }
-    if (node.has_rotation)
-        result *= glm::mat4_cast(
-            glm::quat{node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]});
-    if (node.has_scale)
-        result = glm::scale(result, glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
-    if (node.has_translation)
-        result = glm::translate(
-            result, glm::vec3(node.translation[0], node.translation[1], node.translation[2]));
     return result;
 }
 
